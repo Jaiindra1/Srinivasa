@@ -1,0 +1,67 @@
+.container {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.item-list {
+    padding: 8px;
+    width: 250px;
+    margin-bottom: 10px;
+}
+
+.form-submit {
+    background-color: #28a745;
+    color: white;
+    padding: 10px;
+    border: none;
+    cursor: pointer;
+    margin-left: 10px;
+}
+
+.dropdown {
+    list-style: none;
+    padding: 0;
+    border: 1px solid #ccc;
+    max-width: 250px;
+    margin: auto;
+}
+
+.dropdown li {
+    padding: 10px;
+    cursor: pointer;
+    background: #f9f9f9;
+    border-bottom: 1px solid #ccc;
+}
+
+.dropdown li:hover {
+    background: #e0e0e0;
+}
+
+.base-select {
+    padding: 8px;
+    width: 250px;
+    margin: 10px 0;
+}
+
+.todo-list {
+    list-style: none;
+    padding: 0;
+    max-width: 300px;
+    margin: auto;
+}
+
+.todo-list li {
+    padding: 10px;
+    background: #f1f1f1;
+    margin: 5px 0;
+    display: flex;
+    justify-content: space-between;
+}
+
+.remove-btn {
+    background: red;
+    color: white;
+    border: none;
+    cursor: pointer;
+    padding: 5px;
+}
