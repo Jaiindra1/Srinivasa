@@ -37,7 +37,7 @@ class ProductSelect extends Component {
     getBaseOptions = async (productId) => {
         try {
             if (!productId) return;
-            const response = await fetch(`https://srinivasa-backend.onrender.com/${productId}`);
+            const response = await fetch(`https://srinivasa-backend.onrender.com/BaseOptions/${productId}`);
             if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
             const baseData = await response.json();
             
