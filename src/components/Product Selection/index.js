@@ -11,6 +11,7 @@ class ProductSelect extends Component {
         selectedLiters: "",
         selectedPrice: "",
         showDropdown: false,
+         percentageIncrease: "",
         todoList: []
     };
 
@@ -90,22 +91,67 @@ class ProductSelect extends Component {
         this.setState({ selectedLiters, selectedPrice: selectedItem ? selectedItem.price : "N/A" });
     };
 
+    handleQuantitySelect = (event) => {
+        const selectedQuantity = event.target.value;
+        this.setState({ selectedQuantity });
+    };
+    
     handleAddTask = () => {
-        const { searchInput, selectedBase, selectedLiters, selectedPrice, todoList, data } = this.state;
-        if (searchInput.trim() !== "" && selectedBase && selectedLiters) {
+        const { searchInput, selectedBase, selectedLiters, selectedPrice, selectedQuantity, percentageIncrease, todoList, data, gst, discount } = this.state;
+    
+        if (searchInput.trim() !== "" && selectedBase && selectedLiters && selectedQuantity) {
             const selectedProduct = data.find(product => product.productName === searchInput);
             const company = selectedProduct ? selectedProduct.company : "Unknown";
+    
+            let basePrice = parseFloat(selectedPrice);
+            let percentage = parseFloat(percentageIncrease) || 0;
+            let quantity = parseInt(selectedQuantity, 10);
+            let gstPercentage = parseFloat(gst) || 0;
+            let discountPercentage = parseFloat(discount) || 0;
+    
+            // Step 1: Apply Percentage Increase
+            let finalPrice = basePrice + (basePrice * (percentage / 100));
+    
+            // Step 2: Apply GST
+            finalPrice = finalPrice + (finalPrice * (gstPercentage / 100));
+    
+            // Step 3: Multiply by Quantity
+            finalPrice *= quantity;
+    
+            // Step 4: Apply Discount
+            finalPrice = finalPrice - (finalPrice * (discountPercentage / 100));
+    
+            // Round off to 2 decimal places
+            finalPrice = finalPrice.toFixed(2);
+    
             this.setState({
-                todoList: [...todoList, { company, product: searchInput, base: selectedBase, liters: selectedLiters, price: selectedPrice, discount: "20%" }],
+                todoList: [
+                    ...todoList,
+                    {
+                        company,
+                        product: searchInput,
+                        base: selectedBase,
+                        liters: selectedLiters,
+                        quantity,
+                        price: finalPrice,
+                        discount: `${discountPercentage}%`,
+                        gst: `${gstPercentage}%`
+                    }
+                ],
                 searchInput: "",
                 selectedBase: "",
                 selectedLiters: "",
                 selectedPrice: "",
+                selectedQuantity: "",
+                percentageIncrease: "",
+                gst: "",
+                discount: "",
                 baseOptions: []
             });
         }
     };
-
+    
+    
     handleRemoveTask = (index) => {
         this.setState(prevState => ({
             todoList: prevState.todoList.filter((_, i) => i !== index)
@@ -117,7 +163,7 @@ class ProductSelect extends Component {
     };
 
     render() {
-        const { searchInput, filteredData, showDropdown, baseOptions, selectedBase, selectedLiters, selectedPrice, todoList } = this.state;
+        const { searchInput, filteredData, showDropdown, baseOptions, selectedBase, selectedLiters, todoList } = this.state;
         
         return (
             <div className="container">
@@ -160,44 +206,87 @@ class ProductSelect extends Component {
                             </select>
                         )}
 
-                        {selectedLiters && (
-                            <p className="price-info">Price: ₹{selectedPrice}</p>
-                        )}
+                    {selectedLiters && (
+                        <>
+                            <select className="quantity-select" onChange={this.handleQuantitySelect} value={this.state.selectedQuantity}>
+                                <option value="" disabled>Select Quantity</option>
+                                {[0,1,2,3,4,5,6,7,8,9,10 ].map(num => (
+                                    <option key={num} value={num}>{num}</option>
+                                ))}
+                            </select>
+
+                            {/* 🔹 Input for Percentage Increase */}
+                            <input 
+                                type="number"
+                                className="percentage-input"
+                                placeholder="Enter % Increase"
+                                value={this.state.percentageIncrease}
+                                onChange={(e) => this.setState({ percentageIncrease: e.target.value })}
+                            />
+                            {/* GST Input */}
+                        <input 
+                            type="number" 
+                            className="gst-input" 
+                            placeholder="Enter GST %" 
+                            value={this.state.gst} 
+                            onChange={(e) => this.setState({ gst: e.target.value })} 
+                        />
+
+                        {/* Discount Input */}
+                        <input 
+                            type="number" 
+                            className="discount-input" 
+                            placeholder="Enter Discount %" 
+                            value={this.state.discount} 
+                            onChange={(e) => this.setState({ discount: e.target.value })} 
+                        />
+
+                        </>
+                    )}
                     </>
                 )}
-
-                <button className='form-submit' onClick={this.handleAddTask} disabled={!selectedBase || !selectedLiters}>
+                               <button className='form-submit' onClick={this.handleAddTask} disabled={!selectedBase || !selectedLiters}>
                     Add to List
                 </button>
-
                 <h2>Receipt</h2>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>S.No</th>
-                            <th>Company</th>
-                            <th>Product</th>
-                            <th>Quantity</th>
-                            <th>Amount</th>
-                            <th>Discount</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {todoList.map((task, index) => (
-                            <tr key={index}>
-                                <td>{index + 1}</td>
-                                <td>{task.company}</td>
-                                <td>{task.product}</td>
-                                <td>{task.liters}L</td>
-                                <td>₹{task.price}</td>
-                                <td>{task.discount}</td>
-                                <td><button onClick={() => this.handleRemoveTask(index)}>Remove</button></td>
+                        <table>
+                         <thead>
+                            <tr>
+                                <th>S.No</th>
+                                <th>Company</th>
+                                <th>Product</th>
+                                <th>Base</th>
+                                <th>Liters</th>
+                                <th>Quantity</th>
+                                <th>Amount</th>
+                                <th>Discount</th>
+                                <th>GST</th>
+                                <th>Action</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
-                <p>Total: ₹{this.calculateTotal()}</p>
+                        </thead>
+
+            <tbody>
+                {todoList.map((task, index) => (
+                     <tr key={index}>
+                     <td>{index + 1}</td>
+                     <td>{task.company}</td>
+                     <td>{task.product}</td>
+                     <td>{task.base}</td>
+                     <td>{task.liters}</td>
+                     <td>{task.quantity}</td>
+                     <td>₹{task.price}</td>
+                     <td>{task.discount}</td>
+                     <td>{task.gst}</td>
+                     <td><button className="remove" onClick={() => this.handleRemoveTask(index)}>Remove</button></td>
+                 </tr>
+                ))}
+                {/* ✅ Add Total Row at the Bottom of the Table ✅ */}
+                <tr>
+                    <td colSpan="6" className="total-label"><strong>Total:</strong></td>
+                    <td colSpan="1"><p className="column-4">₹{this.calculateTotal()}</p></td>
+                </tr>
+            </tbody>
+        </table>
             </div>
         );
     }
