@@ -11,12 +11,13 @@ class ProductSelect extends Component {
         selectedLiters: "",
         selectedPrice: "",
         showDropdown: false,
-        percentageIncrease: "",
+        percentageIncrease: "18",
         discount: "",
         selectedQuantity: "",
         todoList: [],
         editIndex: null
     };
+    
 
     componentDidMount() {
         this.getData();
@@ -24,7 +25,7 @@ class ProductSelect extends Component {
 
     getData = async () => {
         try {
-            const response = await fetch('https://srinivasa-backend.onrender.com/Products');
+            const response = await fetch('http://localhost:5000/Products');
             if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
             const data = await response.json();
             const updateData = data.map(eachItem => ({
@@ -41,7 +42,7 @@ class ProductSelect extends Component {
     getBaseOptions = async (productId) => {
         try {
             if (!productId) return;
-            const response = await fetch(`https://srinivasa-backend.onrender.com/BaseOptions/${productId}`);
+            const response = await fetch(`http://localhost:5000/BaseOptions/${productId}`);
             if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
             const baseData = await response.json();
             const updateBase = baseData.map(eachItem => ({
@@ -80,14 +81,12 @@ class ProductSelect extends Component {
     };
 
     handleBaseSelect = (event) => {
-        const selectedBase = event.target.value;
-        this.setState({ selectedBase, selectedLiters: "", selectedPrice: "" });
+        this.setState({ selectedBase: event.target.value, selectedLiters: "", selectedPrice: "" });
     };
     
     handleLitersSelect = (event) => {
         const selectedLiters = event.target.value;
         const { baseOptions, selectedBase } = this.state;
-
         const selectedItem = baseOptions.find(base => base.base === selectedBase && base.liters === selectedLiters);
         
         this.setState({ selectedLiters, selectedPrice: selectedItem ? selectedItem.price : "N/A" });
@@ -98,44 +97,37 @@ class ProductSelect extends Component {
     };
     
     handleAddTask = () => {
-        const { searchInput, selectedBase, selectedLiters, selectedPrice, selectedQuantity, percentageIncrease, discount, todoList, data, editIndex } = this.state;
+        const { searchInput, selectedBase, selectedLiters, selectedPrice, selectedQuantity, discount, todoList, data, editIndex } = this.state;
     
         if (searchInput.trim() !== "" && selectedBase && selectedLiters && selectedQuantity) {
             const selectedProduct = data.find(product => product.productName === searchInput);
             const company = selectedProduct ? selectedProduct.company : "Unknown";
     
-            let basePrice = parseFloat(selectedPrice);
-            let percentage = parseFloat(percentageIncrease) || 0;
+            let basePrice = parseFloat(selectedPrice); // Use stored price
+            let percentage = parseFloat(18) || 0; // GST (default 18%)
             let quantity = parseInt(selectedQuantity, 10);
             let discountPercentage = parseFloat(discount) || 0;
     
-            let finalPrice = basePrice + (basePrice * (percentage / 100));
-            finalPrice *= quantity;
-            finalPrice = finalPrice - (finalPrice * (discountPercentage / 100));
+            let finalPrice = basePrice + (basePrice * (percentage / 100)); // Apply GST
+            finalPrice *= quantity; // Apply quantity
+            finalPrice = finalPrice - (finalPrice * (discountPercentage / 100)); // Apply discount
             finalPrice = finalPrice.toFixed(2);
     
+            const updatedTask = {
+                company,
+                product: searchInput,
+                base: selectedBase,
+                liters: selectedLiters,
+                quantity,
+                price: finalPrice,
+                discount: `${discountPercentage}%`,
+                gst: `${percentage}%`
+            };
+    
             if (editIndex !== null) {
-                todoList[editIndex] = {
-                    company,
-                    product: searchInput,
-                    base: selectedBase,
-                    liters: selectedLiters,
-                    quantity,
-                    price: finalPrice,
-                    discount: `${discountPercentage}%`,
-                    gst: `${percentage}%`
-                };
+                todoList[editIndex] = updatedTask;
             } else {
-                todoList.push({
-                    company,
-                    product: searchInput,
-                    base: selectedBase,
-                    liters: selectedLiters,
-                    quantity,
-                    price: finalPrice,
-                    discount: `${discountPercentage}%`,
-                    gst: `${percentage}%`
-                });
+                todoList.push(updatedTask);
             }
     
             this.setState({
@@ -155,20 +147,66 @@ class ProductSelect extends Component {
     
     handleEditTask = (index) => {
         const item = this.state.todoList[index];
+    
         this.setState({
             searchInput: item.product,
             selectedBase: item.base,
             selectedLiters: item.liters,
             selectedQuantity: item.quantity,
+            discount: item.discount.replace('%', ''), // Remove '%' for editing
             percentageIncrease: item.gst.replace('%', ''),
-            discount: item.discount.replace('%', ''),
-            editIndex: index
+            selectedPrice: item.price,
+            editIndex: index,
         });
     };
     
+    
+    handleSaveEdit = () => {
+        const { editIndex, selectedQuantity, discount, todoList } = this.state;
+    
+        if (editIndex !== null) {
+            let updatedTask = { ...todoList[editIndex] };
+    
+            // Extract old values
+            let oldQuantity = parseInt(updatedTask.quantity, 10);
+            let oldPrice = parseFloat(updatedTask.price.replace("₹", "")); // Convert ₹ to number
+            let oldDiscount = parseFloat(updatedTask.discount.replace("%", "")) || 0; // Remove % and convert
+    
+            // Convert input values
+            let newQuantity = parseInt(selectedQuantity, 10);
+            let newDiscount = parseFloat(discount) || 0;
+    
+            // ✅ Step 1: If quantity increased, multiply by the original price per unit
+            let finalPrice = oldPrice * (newQuantity / oldQuantity);
+    
+            // ✅ Step 2: If discount changed, apply new discount
+            if (newDiscount !== oldDiscount) {
+                let discountDifference = (oldDiscount - newDiscount) / 100;
+                finalPrice = finalPrice * (1 + discountDifference); // Apply discount change
+            }
+    
+            // Round to 2 decimal places
+            finalPrice = finalPrice.toFixed(2);
+    
+            // Update the task in the list
+            updatedTask.quantity = newQuantity;
+            updatedTask.discount = `${newDiscount}%`;
+            updatedTask.price = `₹${finalPrice}`; // Update price
+    
+            let updatedList = [...todoList];
+            updatedList[editIndex] = updatedTask;
+    
+            this.setState({
+                todoList: updatedList,
+                editIndex: null, // Exit edit mode
+            });
+        }
+    };
+
     handleRemoveTask = (index) => {
         this.setState(prevState => ({
-            todoList: prevState.todoList.filter((_, i) => i !== index)
+            todoList: prevState.todoList.filter((_, i) => i !== index),
+            editIndex: null
         }));
     };
 
@@ -229,19 +267,10 @@ class ProductSelect extends Component {
                                 ))}
                             </select>
 
-                            {/* 🔹 Input for Percentage Increase */}
-                            <input 
-                                type="number"
-                                className="percentage-input"
-                                placeholder="Enter % Increase"
-                                value={this.state.percentageIncrease}
-                                onChange={(e) => this.setState({ percentageIncrease: e.target.value })}
-                            />
-
                         {/* Discount Input */}
                         <input 
                             type="number" 
-                            className="discount-input" 
+                            className="quantity-select discount-input" 
                             placeholder="Enter Discount %" 
                             value={this.state.discount} 
                             onChange={(e) => this.setState({ discount: e.target.value })} 
@@ -261,8 +290,6 @@ class ProductSelect extends Component {
                                 <th>S.No</th>
                                 <th>Company</th>
                                 <th>Product</th>
-                                <th>Base</th>
-                                <th>Liters</th>
                                 <th>Quantity</th>
                                 <th>GST</th>
                                 <th>Discount</th>
@@ -271,31 +298,50 @@ class ProductSelect extends Component {
                             </tr>
                         </thead>
 
-            <tbody>
-                {todoList.map((task, index) => (
-                     <tr key={index}>
-                     <td>{index + 1}</td>
-                     <td>{task.company}</td>
-                     <td>{task.product}</td>
-                     <td>{task.base}</td>
-                     <td>{task.liters}</td>
-                     <td>{task.quantity}</td>
-                     <td>{task.gst}</td>
-                     <td>{task.discount}</td>
-                     <td>₹{task.price}</td>
-                     {this.state.todoList.map((task, index) => (
-                            <tr key={index}>
-                                <td>
-                                    <button onClick={() => this.handleEditTask(index)}>Edit</button>
-                                    <button onClick={() => this.handleRemoveTask(index)}>Remove</button>
-                                </td>
-                            </tr>
-                        ))}
-                 </tr>
-                ))}
-                {/* ✅ Add Total Row at the Bottom of the Table ✅ */}
-                
-            </tbody>
+                        <tbody>
+    {todoList.map((task, index) => (
+        <tr key={index}>
+            <td>{index + 1}</td>
+            <td>{task.company}</td>
+            <td>{task.product}-{task.base}-{task.liters}</td>
+            <td>
+                {this.state.editIndex === index ? (
+                    <input
+                        type="number"
+                        value={this.state.selectedQuantity}
+                        onChange={(e) => this.setState({ selectedQuantity: e.target.value })}
+                    />
+                ) : (
+                    task.quantity
+                )}
+            </td>
+            <td>{task.gst}</td>
+            <td>
+                {this.state.editIndex === index ? (
+                    <input
+                        type="number"
+                        value={this.state.discount}
+                        onChange={(e) => this.setState({ discount: e.target.value })}
+                    />
+                ) : (
+                    task.discount
+                )}
+            </td>
+            <td>{task.price}</td>
+            <td>
+                {this.state.editIndex === index ? (
+                    <button onClick={this.handleSaveEdit}>Done</button>
+                ) : (
+                    <>
+                        <button onClick={() => this.handleEditTask(index)}>Edit</button>
+                        <button onClick={() => this.handleRemoveTask(index)}>Remove</button>
+                    </>
+                )}
+            </td>
+        </tr>
+    ))}
+</tbody>
+
         </table>
             </div>
         );
