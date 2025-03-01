@@ -11,8 +11,11 @@ class ProductSelect extends Component {
         selectedLiters: "",
         selectedPrice: "",
         showDropdown: false,
-         percentageIncrease: "",
-        todoList: []
+        percentageIncrease: "",
+        discount: "",
+        selectedQuantity: "",
+        todoList: [],
+        editIndex: null
     };
 
     componentDidMount() {
@@ -41,7 +44,6 @@ class ProductSelect extends Component {
             const response = await fetch(`https://srinivasa-backend.onrender.com/BaseOptions/${productId}`);
             if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
             const baseData = await response.json();
-            
             const updateBase = baseData.map(eachItem => ({
                 base: eachItem.BaseName,
                 liters: eachItem.Liters,
@@ -92,12 +94,11 @@ class ProductSelect extends Component {
     };
 
     handleQuantitySelect = (event) => {
-        const selectedQuantity = event.target.value;
-        this.setState({ selectedQuantity });
+        this.setState({ selectedQuantity: event.target.value });
     };
     
     handleAddTask = () => {
-        const { searchInput, selectedBase, selectedLiters, selectedPrice, selectedQuantity, percentageIncrease, todoList, data, gst, discount } = this.state;
+        const { searchInput, selectedBase, selectedLiters, selectedPrice, selectedQuantity, percentageIncrease, discount, todoList, data, editIndex } = this.state;
     
         if (searchInput.trim() !== "" && selectedBase && selectedLiters && selectedQuantity) {
             const selectedProduct = data.find(product => product.productName === searchInput);
@@ -106,51 +107,64 @@ class ProductSelect extends Component {
             let basePrice = parseFloat(selectedPrice);
             let percentage = parseFloat(percentageIncrease) || 0;
             let quantity = parseInt(selectedQuantity, 10);
-            let gstPercentage = parseFloat(gst) || 0;
             let discountPercentage = parseFloat(discount) || 0;
     
-            // Step 1: Apply Percentage Increase
             let finalPrice = basePrice + (basePrice * (percentage / 100));
-    
-            // Step 2: Apply GST
-            finalPrice = finalPrice + (finalPrice * (gstPercentage / 100));
-    
-            // Step 3: Multiply by Quantity
             finalPrice *= quantity;
-    
-            // Step 4: Apply Discount
             finalPrice = finalPrice - (finalPrice * (discountPercentage / 100));
-    
-            // Round off to 2 decimal places
             finalPrice = finalPrice.toFixed(2);
     
+            if (editIndex !== null) {
+                todoList[editIndex] = {
+                    company,
+                    product: searchInput,
+                    base: selectedBase,
+                    liters: selectedLiters,
+                    quantity,
+                    price: finalPrice,
+                    discount: `${discountPercentage}%`,
+                    gst: `${percentage}%`
+                };
+            } else {
+                todoList.push({
+                    company,
+                    product: searchInput,
+                    base: selectedBase,
+                    liters: selectedLiters,
+                    quantity,
+                    price: finalPrice,
+                    discount: `${discountPercentage}%`,
+                    gst: `${percentage}%`
+                });
+            }
+    
             this.setState({
-                todoList: [
-                    ...todoList,
-                    {
-                        company,
-                        product: searchInput,
-                        base: selectedBase,
-                        liters: selectedLiters,
-                        quantity,
-                        price: finalPrice,
-                        discount: `${discountPercentage}%`,
-                        gst: `${gstPercentage}%`
-                    }
-                ],
+                todoList,
                 searchInput: "",
                 selectedBase: "",
                 selectedLiters: "",
                 selectedPrice: "",
                 selectedQuantity: "",
                 percentageIncrease: "",
-                gst: "",
                 discount: "",
-                baseOptions: []
+                baseOptions: [],
+                editIndex: null
             });
         }
     };
     
+    handleEditTask = (index) => {
+        const item = this.state.todoList[index];
+        this.setState({
+            searchInput: item.product,
+            selectedBase: item.base,
+            selectedLiters: item.liters,
+            selectedQuantity: item.quantity,
+            percentageIncrease: item.gst.replace('%', ''),
+            discount: item.discount.replace('%', ''),
+            editIndex: index
+        });
+    };
     
     handleRemoveTask = (index) => {
         this.setState(prevState => ({
@@ -167,7 +181,7 @@ class ProductSelect extends Component {
         
         return (
             <div className="container">
-                <h1>Srinivasa Enterprises</h1>
+                <h1 className="heading">Srinivasa Enterprises</h1>
 
                 <input
                     className="item-list"
@@ -223,14 +237,6 @@ class ProductSelect extends Component {
                                 value={this.state.percentageIncrease}
                                 onChange={(e) => this.setState({ percentageIncrease: e.target.value })}
                             />
-                            {/* GST Input */}
-                        <input 
-                            type="number" 
-                            className="gst-input" 
-                            placeholder="Enter GST %" 
-                            value={this.state.gst} 
-                            onChange={(e) => this.setState({ gst: e.target.value })} 
-                        />
 
                         {/* Discount Input */}
                         <input 
@@ -258,9 +264,9 @@ class ProductSelect extends Component {
                                 <th>Base</th>
                                 <th>Liters</th>
                                 <th>Quantity</th>
-                                <th>Amount</th>
-                                <th>Discount</th>
                                 <th>GST</th>
+                                <th>Discount</th>
+                                <th>Amount</th>
                                 <th>Action</th>
                             </tr>
                         </thead>
@@ -274,17 +280,23 @@ class ProductSelect extends Component {
                      <td>{task.base}</td>
                      <td>{task.liters}</td>
                      <td>{task.quantity}</td>
-                     <td>₹{task.price}</td>
-                     <td>{task.discount}</td>
                      <td>{task.gst}</td>
+                     <td>{task.discount}</td>
+                     <td>₹{task.price}</td>
+                     
+                     
                      <td><button className="remove" onClick={() => this.handleRemoveTask(index)}>Remove</button></td>
                  </tr>
                 ))}
                 {/* ✅ Add Total Row at the Bottom of the Table ✅ */}
-                <tr>
-                    <td colSpan="6" className="total-label"><strong>Total:</strong></td>
-                    <td colSpan="1"><p className="column-4">₹{this.calculateTotal()}</p></td>
-                </tr>
+                {this.state.todoList.map((task, index) => (
+                            <tr key={index}>
+                                <td>
+                                    <button onClick={() => this.handleEditTask(index)}>Edit</button>
+                                    <button onClick={() => this.handleRemoveTask(index)}>Remove</button>
+                                </td>
+                            </tr>
+                        ))}
             </tbody>
         </table>
             </div>
