@@ -2,6 +2,7 @@
 body {
     font-family: 'Inter', sans-serif;
     background: linear-gradient(to bottom, #2350d8, #d1e0ff) no-repeat;
+    height: 100vh;
     color: #333;
     margin: 0;
     padding: 0;
@@ -162,7 +163,7 @@ button {
     }
 
     th, td {
-        font-size: 5px;
+        font-size: 38%;
         padding: 7px;
     }
 
@@ -172,7 +173,7 @@ button {
         font-size: 14px;
     }
     .item-list{
-        font-size: 7px;
+        font-size: 10px;
     }
     .heading{
         font-size: 20px;
@@ -180,4 +181,13 @@ button {
     .form-submit{
         width: 20px;
     }
+    .form-submit:disabled {
+        background: #46f082;
+        cursor: not-allowed;
+        width: 39%;
+        font-size: 92%;
+        padding: 10px;
+        margin-left: 15px;
+    }
 }
+
