@@ -167,23 +167,25 @@ class ProductSelect extends Component {
         if (editIndex !== null) {
             let updatedTask = { ...todoList[editIndex] };
     
-            // Extract old values
             let oldQuantity = parseInt(updatedTask.quantity, 10);
-            let oldPrice = parseFloat(updatedTask.price.replace("₹", "")); // Convert ₹ to number
-            let oldDiscount = parseFloat(updatedTask.discount.replace("%", "")) || 0; // Remove % and convert
+            let oldPrice = parseFloat(updatedTask.price); // Convert price correctly
+            let oldDiscount = parseFloat(updatedTask.discount.replace("%", "")) || 0;
+            let gstPercentage = parseFloat(updatedTask.gst.replace("%", "")) || 0;
     
-            // Convert input values
             let newQuantity = parseInt(selectedQuantity, 10);
             let newDiscount = parseFloat(discount) || 0;
     
-            // ✅ Step 1: If quantity increased, multiply by the original price per unit
-            let finalPrice = oldPrice * (newQuantity / oldQuantity);
+            // Calculate the base price per unit before tax
+            let basePricePerUnit = oldPrice / oldQuantity;
     
-            // ✅ Step 2: If discount changed, apply new discount
-            if (newDiscount !== oldDiscount) {
-                let discountDifference = (oldDiscount - newDiscount) / 100;
-                finalPrice = finalPrice * (1 + discountDifference); // Apply discount change
-            }
+            // Calculate the new total price before discount
+            let totalPriceBeforeDiscount = basePricePerUnit * newQuantity;
+    
+            // Apply GST increase
+            let finalPrice = totalPriceBeforeDiscount + (totalPriceBeforeDiscount * (gstPercentage / 100));
+    
+            // Apply discount
+            finalPrice -= (finalPrice * (newDiscount / 100));
     
             // Round to 2 decimal places
             finalPrice = finalPrice.toFixed(2);
@@ -191,7 +193,7 @@ class ProductSelect extends Component {
             // Update the task in the list
             updatedTask.quantity = newQuantity;
             updatedTask.discount = `${newDiscount}%`;
-            updatedTask.price = `₹${finalPrice}`; // Update price
+            updatedTask.price = finalPrice; // No need to add "₹" prefix here
     
             let updatedList = [...todoList];
             updatedList[editIndex] = updatedTask;
@@ -199,21 +201,26 @@ class ProductSelect extends Component {
             this.setState({
                 todoList: updatedList,
                 editIndex: null, // Exit edit mode
-            });
+                selectedPrice: finalPrice,
+            }, this.calculateTotal); // Recalculate total after update
         }
     };
-
+    
     handleRemoveTask = (index) => {
         this.setState(prevState => ({
             todoList: prevState.todoList.filter((_, i) => i !== index),
             editIndex: null
         }));
     };
-
     calculateTotal = () => {
-        return this.state.todoList.reduce((total, item) => total + parseFloat(item.price), 0);
+        const total = this.state.todoList.reduce((sum, item) => {
+            let itemPrice = parseFloat(item.price) || 0;
+            return sum + itemPrice;
+        }, 0);
+    
+        return total.toFixed(2);
     };
-
+    
     render() {
         const { searchInput, filteredData, showDropdown, baseOptions, selectedBase, selectedLiters, todoList } = this.state;
         
@@ -262,14 +269,14 @@ class ProductSelect extends Component {
                         <>
                             <select className="quantity-select" onChange={this.handleQuantitySelect} value={this.state.selectedQuantity}>
                                 <option value="" disabled>Select Quantity</option>
-                                {[0,1,2,3,4,5,6,7,8,9,10 ].map(num => (
+                                {[1,2,3,4,5,6,7,8,9,10 ].map(num => (
                                     <option key={num} value={num}>{num}</option>
                                 ))}
                             </select>
-
+                        <br/>
                         {/* Discount Input */}
                         <input 
-                            type="number" 
+                            type="" 
                             className="quantity-select discount-input" 
                             placeholder="Enter Discount %" 
                             value={this.state.discount} 
@@ -280,6 +287,7 @@ class ProductSelect extends Component {
                     )}
                     </>
                 )}
+                <br></br>
                                <button className='form-submit' onClick={this.handleAddTask} disabled={!selectedBase || !selectedLiters}>
                     Add to List
                 </button>
@@ -301,13 +309,14 @@ class ProductSelect extends Component {
                         <tbody>
     {todoList.map((task, index) => (
         <tr key={index}>
-            <td>{index + 1}</td>
+            <td>{index + 1}</td> 
             <td>{task.company}</td>
-            <td>{task.product}-{task.base}-{task.liters}</td>
+            <td className="product">{task.product}-{task.base}-{task.liters}</td>
             <td>
                 {this.state.editIndex === index ? (
                     <input
-                        type="number"
+                        type="text"
+                        className="quantity"
                         value={this.state.selectedQuantity}
                         onChange={(e) => this.setState({ selectedQuantity: e.target.value })}
                     />
@@ -319,7 +328,8 @@ class ProductSelect extends Component {
             <td>
                 {this.state.editIndex === index ? (
                     <input
-                        type="number"
+                        type="text"
+                        className="discount"
                         value={this.state.discount}
                         onChange={(e) => this.setState({ discount: e.target.value })}
                     />
@@ -333,13 +343,19 @@ class ProductSelect extends Component {
                     <button onClick={this.handleSaveEdit}>Done</button>
                 ) : (
                     <>
-                        <button onClick={() => this.handleEditTask(index)}>Edit</button>
-                        <button onClick={() => this.handleRemoveTask(index)}>Remove</button>
+                        <button className="Edit" onClick={() => this.handleEditTask(index)}>Edit</button>
+                        <br></br>
+                        <button className="remove" onClick={() => this.handleRemoveTask(index)}>Remove</button>
                     </>
                 )}
             </td>
         </tr>
+        
     ))}
+     <tr>
+                <td colSpan="6" className="total-label"><strong>Total:</strong></td>
+                <td colSpan="2"><p className="column-3">{this.calculateTotal()}</p></td>
+                </tr>
 </tbody>
 
         </table>
