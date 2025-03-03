@@ -1,4 +1,4 @@
-import Data from './components/Reciept/index.js';
+import Receipt from './components/Reciept/index.js';
 import {BrowserRouter, Route, Routes} from "react-router-dom";
 import ProductSelect from './components/Product Selection/index.js';
 import './App.css';
@@ -8,7 +8,7 @@ function App() {
     <BrowserRouter>
       <Routes>
           <Route  path='/' Component={ProductSelect}/>
-          <Route  path='/Reciept' Component={Data}/>
+          <Route  path='/Receipt' Component={Receipt}/>
       </Routes>
     </BrowserRouter>
   )
