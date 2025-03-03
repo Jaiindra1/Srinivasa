@@ -1,4 +1,5 @@
 import { Component } from "react";
+import { useNavigate } from "react-router-dom";
 import './index.css';
 
 class ProductSelect extends Component {
@@ -25,7 +26,7 @@ class ProductSelect extends Component {
 
     getData = async () => {
         try {
-            const response = await fetch('https://srinivasa-backend.onrender.com/Products');
+            const response = await fetch('http://localhost:5000/Products');
             if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
             const data = await response.json();
             const updateData = data.map(eachItem => ({
@@ -42,7 +43,7 @@ class ProductSelect extends Component {
     getBaseOptions = async (productId) => {
         try {
             if (!productId) return;
-            const response = await fetch(`https://srinivasa-backend.onrender.com/BaseOptions/${productId}`);
+            const response = await fetch(`http://localhost:5000/BaseOptions/${productId}`);
             if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
             const baseData = await response.json();
             const updateBase = baseData.map(eachItem => ({
@@ -228,7 +229,7 @@ class ProductSelect extends Component {
     
     render() {
         const { searchInput, filteredData, showDropdown, baseOptions, selectedBase, selectedLiters, todoList } = this.state;
-        
+        const navigate = this.props.navigate;
         return (
             <div className="container">
                 <h1 className="heading">Srinivasa Enterprises</h1>
@@ -364,9 +365,18 @@ class ProductSelect extends Component {
 </tbody>
 
         </table>
+
+         {/* Button to Navigate to Receipt Page */}
+         <button onClick={() => navigate('/Receipt', { state: { todoList, total: this.calculateTotal() } })}
+ >
+                    Generate Receipt
+                </button>
             </div>
         );
     }
 }
 
-export default ProductSelect;
+export default function ProductSelectWrapper(props) {
+    const navigate = useNavigate();
+    return <ProductSelect {...props} navigate={navigate} />;
+}
