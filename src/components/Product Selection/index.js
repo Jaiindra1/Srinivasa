@@ -46,7 +46,7 @@ class ProductSelect extends Component {
             if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
             const baseData = await response.json();
             const updateBase = baseData.map(eachItem => ({
-                base: eachItem.BaseName,
+                base: eachItem.BaseCode,
                 liters: eachItem.Liters,
                 price: eachItem.Price,
             }));
