@@ -25,7 +25,7 @@ class ProductSelect extends Component {
 
     getData = async () => {
         try {
-            const response = await fetch('https://srinivasa-backend.onrender.com/Products');
+            const response = await fetch('http://localhost:5000/Products');
             if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
             const data = await response.json();
             const updateData = data.map(eachItem => ({
@@ -42,7 +42,7 @@ class ProductSelect extends Component {
     getBaseOptions = async (productId) => {
         try {
             if (!productId) return;
-            const response = await fetch(`https://srinivasa-backend.onrender.com/BaseOptions/${productId}`);
+            const response = await fetch(`http://localhost:5000/BaseOptions/${productId}`);
             if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
             const baseData = await response.json();
             const updateBase = baseData.map(eachItem => ({
@@ -167,25 +167,23 @@ class ProductSelect extends Component {
         if (editIndex !== null) {
             let updatedTask = { ...todoList[editIndex] };
     
+            // Extract old values
             let oldQuantity = parseInt(updatedTask.quantity, 10);
-            let oldPrice = parseFloat(updatedTask.price); // Convert price correctly
-            let oldDiscount = parseFloat(updatedTask.discount.replace("%", "")) || 0;
-            let gstPercentage = parseFloat(updatedTask.gst.replace("%", "")) || 0;
+            let oldPrice = parseFloat(updatedTask.price.replace("₹", "")); // Convert ₹ to number
+            let oldDiscount = parseFloat(updatedTask.discount.replace("%", "")) || 0; // Remove % and convert
     
+            // Convert input values
             let newQuantity = parseInt(selectedQuantity, 10);
             let newDiscount = parseFloat(discount) || 0;
     
-            // Calculate the base price per unit before tax
-            let basePricePerUnit = oldPrice / oldQuantity;
+            // ✅ Step 1: If quantity increased, multiply by the original price per unit
+            let finalPrice = oldPrice * (newQuantity / oldQuantity);
     
-            // Calculate the new total price before discount
-            let totalPriceBeforeDiscount = basePricePerUnit * newQuantity;
-    
-            // Apply GST increase
-            let finalPrice = totalPriceBeforeDiscount + (totalPriceBeforeDiscount * (gstPercentage / 100));
-    
-            // Apply discount
-            finalPrice -= (finalPrice * (newDiscount / 100));
+            // ✅ Step 2: If discount changed, apply new discount
+            if (newDiscount !== oldDiscount) {
+                let discountDifference = (oldDiscount - newDiscount) / 100;
+                finalPrice = finalPrice * (1 + discountDifference); // Apply discount change
+            }
     
             // Round to 2 decimal places
             finalPrice = finalPrice.toFixed(2);
@@ -193,18 +191,23 @@ class ProductSelect extends Component {
             // Update the task in the list
             updatedTask.quantity = newQuantity;
             updatedTask.discount = `${newDiscount}%`;
-            updatedTask.price = finalPrice; // No need to add "₹" prefix here
+            updatedTask.price = finalPrice; // ✅ Remove ₹ to avoid duplicate currency symbols
     
             let updatedList = [...todoList];
             updatedList[editIndex] = updatedTask;
     
+            // ✅ Set state and ensure total updates
             this.setState({
                 todoList: updatedList,
                 editIndex: null, // Exit edit mode
                 selectedPrice: finalPrice,
-            }, this.calculateTotal); // Recalculate total after update
+            }, () => {
+                console.log("Updated List:", updatedList);
+                console.log("New Total:", this.calculateTotal()); // Debugging
+            });
         }
     };
+    
     
     handleRemoveTask = (index) => {
         this.setState(prevState => ({
@@ -220,6 +223,8 @@ class ProductSelect extends Component {
     
         return total.toFixed(2);
     };
+    
+    
     
     render() {
         const { searchInput, filteredData, showDropdown, baseOptions, selectedBase, selectedLiters, todoList } = this.state;
