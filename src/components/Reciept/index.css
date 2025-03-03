@@ -1,31 +1,84 @@
-body {
-    font-family: Arial, sans-serif;
-}
-
-table {
-    width: 60%;
-    border-collapse: collapse;
+/* Receipt.css */
+.receipt-container {
+    max-width: 800px;
     margin: 20px auto;
-    font-size: 16px;
-    background-color: white; /* White background for the table */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Soft shadow for a 3D effect */
-    border-radius: 1px;
-    overflow: hidden;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    background: #f9f9f9;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    text-align: center;
 }
 
-th, td {
-    border: 2px solid black;
+.receipt-title {
+    font-size: 24px;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+.receipt-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+.receipt-table th, 
+.receipt-table td {
+    border: 2px solid #ddd;
     padding: 10px;
     text-align: center;
 }
 
-th {
-    background-color: #f4f4f4;
-    font-weight: bold;
+.receipt-table th {
+    color: orange;
 }
 
-h1 {
+.receipt-table tr:nth-child(even) {
+    background: #f2f2f2;
+}
+
+.receipt-total {
+    font-size: 20px;
+    font-weight: bold;
+    color: black;
+    padding: 10px;
+    border-radius: 5px;
+    display: inline-block;
+}
+.qr-section {
     text-align: center;
-    font-size: 24px;
-    margin-bottom: 20px;
+    margin-top: 20px;
+}
+
+.qr-section h3 {
+    font-size: 18px;
+    margin-bottom: 10px;
+}
+
+.qr-section p {
+    font-size: 14px;
+    color: gray;
+}
+
+.pay-button {
+    margin-top: 10px;
+    padding: 10px 15px;
+    font-size: 16px;
+    background-color: green;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.pay-button:hover {
+    background-color: darkgreen;
+}
+
+.payment-done {
+    text-align: center;
+    font-size: 18px;
+    color: green;
+    font-weight: bold;
+    margin-top: 20px;
 }
