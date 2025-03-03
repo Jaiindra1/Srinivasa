@@ -271,11 +271,53 @@ button {
         white-space: normal; /* Allows text to wrap inside the cell */
         overflow-wrap: break-word;
     }
+    .quantity{
+        background: transparent;
+        border: none;
+        width: 15%;
+        text-align: center;
+    }
+    .discount{
+        background: transparent;
+        border: none;
+        width: 20%;
+        text-align: center;
+    }
+    .Edit{
+        font-size: 85%;
+        margin-top: 5px;
+        width: 69%;
+    }
+    .remove{
+        font-size: 95%;
+        width: 90%;
+    }
 }
 @media (max-width: 320px) and (max-width: 479px) {
     table {
-        width: 40%;
+        width: 40vw;
         font-size: 14px;
+    }
+    .quantity{
+        background: transparent;
+        border: none;
+        width: 10px;
+        text-align: center;
+    }
+    .discount{
+        background: transparent;
+        border: none;
+        width: 10px;
+        text-align: center;
+    }
+    .Edit{
+        font-size: 55%;
+        margin-top: 5px;
+        width: 69%;
+    }
+    .remove{
+        font-size: 55%;
+        width: 60%;
     }
 }
 @media (min-width: 768px) and (max-width: 1024px) {
@@ -290,5 +332,17 @@ button {
     }
     .remove{
         width: 95%;
+    }
+    .quantity{
+        background: transparent;
+        border: none;
+        width: 10px;
+        text-align: center;
+    }
+    .discount{
+        background: transparent;
+        border: none;
+        width: 10px;
+        text-align: center;
     }
 }
