@@ -8,7 +8,7 @@ function Receipt() {
     const { todoList, total } = location.state || { todoList: [], total: "0.00" };
 
     // UPI Payment Details
-    const upiId = "8712923222@ybl";
+    const upiId = "mi4233715@okaxis";
     const upiPaymentUrl = `upi://pay?pa=${upiId}&pn=Shop&tn=Bill Payment&am=${total}&cu=INR`;
 
     // State to check if payment is done
