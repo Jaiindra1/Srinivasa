@@ -28,7 +28,8 @@ h1 {
 
 /* Search Input */
 .item-list {
-    width: 50%;
+    width: 38%;
+    margin-left: 9px;
     padding: 10px;
     border: 1px solid #ccc;
     border-radius: 8px;
@@ -68,7 +69,8 @@ h1 {
 
 /* Select Boxes */
 .base-select, .liters-select, .quantity-select, .percentage-input {
-    width: 60%;
+    width: 30%;
+    margin-left: 10px;
     padding: 10px;
     margin-top: 10px;
     border-radius: 8px;
@@ -86,7 +88,8 @@ h1 {
 
 /* Button */
 .form-submit {
-    width: 100%;
+    width: 120px;
+    margin-left: 10px;
     padding: 12px;
     background: #2b4eff;
     color: white;
@@ -120,8 +123,9 @@ table {
 }
 
 thead {
-    background: #2b4eff;
     color: rgb(224, 105, 53);
+    border: #333;
+    border-width: 1px;
 }
 .remove{
     background-color: red;
@@ -344,5 +348,8 @@ button {
         border: none;
         width: 10px;
         text-align: center;
+    }
+    input{
+        width: 10px;
     }
 }
