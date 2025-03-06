@@ -45,6 +45,10 @@ function Receipt() {
         }
     };
 
+    const handlePrint = () => {
+        window.print();
+    };
+
     return (
         <div className="receipt-container">
             <h1 className="receipt-title">Receipt</h1>
@@ -89,9 +93,14 @@ function Receipt() {
             ) : (
                 <div className="payment-done">
                     <h2>✅ Payment Completed</h2>
-                    <p> Your payment has been received.</p>
+                    <p>Your payment has been received.</p>
                 </div>
             )}
+
+            {/* Print Button */}
+            <div className="print-section">
+                <button onClick={handlePrint}>🖨️ Print Receipt</button>
+            </div>
         </div>
     );
 }
