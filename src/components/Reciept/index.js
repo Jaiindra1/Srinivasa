@@ -70,9 +70,7 @@ function Receipt() {
             <table className="receipt-table">
                 <thead>
                     <tr>
-                        <th>Product</th>
-                        <th>Base</th>
-                        <th>Liters</th>
+                       <th>Product</th>
                         <th>Quantity</th>
                         <th>Discount</th>
                         <th>GST</th>
