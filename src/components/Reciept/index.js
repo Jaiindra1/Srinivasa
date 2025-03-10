@@ -15,7 +15,7 @@ function Receipt() {
 
      const checkPaymentStatus = async () => {
         try {
-            const response = await fetch("http://localhost:5000/payment-status");
+            const response = await fetch("https://srinivasa-backend.onrender.com/payment-status");
             const data = await response.json();
             if (data.isPaid) {
                 setIsPaid(true);
