@@ -18,7 +18,7 @@ const LoanPersons = () => {
         setLoading(true);
         setError(null);
         try {
-            const response = await fetch("https://srinivasa-backend.onrender.com/loans");
+            const response = await fetch("http://localhost:5000/loans");
             if (!response.ok) throw new Error("Failed to fetch loan data");
             const data = await response.json();
     
@@ -50,7 +50,7 @@ const LoanPersons = () => {
         if (!newStatus) return alert("Please select a new status before updating!");
 
         try {
-            const response = await fetch(`https://srinivasa-backend.onrender.com/loans/${id}`, {
+            const response = await fetch(`http://localhost:5000/loans/${id}`, {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ status: newStatus }),
@@ -77,9 +77,8 @@ const LoanPersons = () => {
             <header className="dashboard-header">
                 <h2>Loan Management System</h2>
                 <nav className="navbar">
-                    <a href="/"><FaUsers /> Persons</a>
-                    <a href="/"><FaFileAlt /> Reports</a>
-                    <a href="/"><FaChartBar /> Analytics</a>
+                    <a href="/Lpersons"><FaUsers /> Persons</a>
+                    <a href="#"><FaFileAlt /> Reports</a>
                 </nav>
             </header>
 
