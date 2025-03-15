@@ -27,7 +27,7 @@ class PiPes extends Component {
 
     getData = async () => {
         try {
-            const response = await fetch('http://localhost:5000/Products');
+            const response = await fetch('https://srinivasa-backend.onrender.com/Products');
             if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
             const data = await response.json();
             const updateData = data.map(eachItem => ({
@@ -44,7 +44,7 @@ class PiPes extends Component {
     getBaseOptions = async (productId) => {
         try {
             if (!productId) return;
-            const response = await fetch(`http://localhost:5000/BaseOptions/${productId}`);
+            const response = await fetch(`https://srinivasa-backend.onrender.com/BaseOptions/${productId}`);
             if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
             const baseData = await response.json();
             const updateBase = baseData.map(eachItem => ({
