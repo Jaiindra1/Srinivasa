@@ -6,7 +6,7 @@ import EnamelsBilling from "../Enamels/index.js";
 import AddLoan from "../AddLoans/index.js";
 import PiPes from "../Pipes/index.js";
 import ProductReport from "../ProductReport/index.js";
-import LoanPersons from "../LoanDetails/index.js"
+import Loandetails from "../LoanDetails/index.js"
 import LoanPerson from "../Loanpersons/index.js";
 import { FaPalette, FaFileInvoice, FaFileAlt, FaPlus, FaCubes, FaUser } from "react-icons/fa";
 import { MdFormatPaint } from "react-icons/md";
