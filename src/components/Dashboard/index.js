@@ -58,7 +58,7 @@ const Dashboard = () => {
                         <Route  path='/Receipt' Component={Receipt}/>
                         <Route  path='/PReports' Component={ProductReport}/>
                         <Route path="/AddLoans" Component={AddLoan}/>
-                        <Route path="/LoanProducts" Component={LoanPersons}/>
+                        <Route path="/LoanProducts" Component={LoanPerson}/>
                         <Route path="/Pipes" Component={PiPes}/>
                         <Route path="Lpersons" Component={LoanPerson}/>
                         <Route 
