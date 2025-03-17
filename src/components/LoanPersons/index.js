@@ -2,7 +2,7 @@ import { useState } from "react";
 import { FaUsers } from "react-icons/fa";
 import "./index.css";
 
-const LoanPersons = () => {
+const LoanPerson = () => {
     const [searchQuery, setSearchQuery] = useState("");
     const [loanData, setLoanData] = useState([]); 
     const [loading, setLoading] = useState(false);
@@ -93,4 +93,4 @@ const LoanPersons = () => {
     );
 };
 
-export default LoanPersons;
+export default LoanPerson;
