@@ -7,6 +7,7 @@ import AddLoan from "../AddLoans/index.js";
 import PiPes from "../Pipes/index.js";
 import ProductReport from "../ProductReport/index.js";
 import LoanPersons from "../LoanDetails/index.js"
+import LoanPerson from "../LoanPersons/index.js";
 import { FaPalette, FaFileInvoice, FaFileAlt, FaPlus, FaCubes, FaUser } from "react-icons/fa";
 import { MdFormatPaint } from "react-icons/md";
 import "./index.css";
@@ -33,6 +34,9 @@ const Dashboard = () => {
                         <MdFormatPaint /><Link to="/Emulsions"> Emulsions</Link>
                     </div>
                     <div className="sidebar-item">
+                        <FaCubes /> <Link to="/Pipes"> Pipes </Link>
+                    </div>
+                    <div className="sidebar-item">
                         <FaFileInvoice /> <Link to="/Receipt"> Receipt </Link>
                     </div>
                     <div className="sidebar-item">
@@ -42,10 +46,7 @@ const Dashboard = () => {
                         <FaPlus /> <Link to="/AddLoans"> Add Loans </Link>
                     </div>
                     <div className="sidebar-item">
-                        <FaCubes /> <Link to="/Pipes"> Pipes </Link>
-                    </div>
-                    <div className="sidebar-item">
-                        <FaUser /> <Link to="/LoanProducts"> Loan Persons </Link>
+                        <FaUser /> <Link to="/Lpersons"> Loan Persons </Link>
                     </div>
                     </div>
 
@@ -59,6 +60,7 @@ const Dashboard = () => {
                         <Route path="/AddLoans" Component={AddLoan}/>
                         <Route path="/LoanProducts" Component={LoanPersons}/>
                         <Route path="/Pipes" Component={PiPes}/>
+                        <Route path="Lpersons" Component={LoanPerson}/>
                         <Route 
   path="/" 
   element={
