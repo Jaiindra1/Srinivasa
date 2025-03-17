@@ -1,86 +1,146 @@
 import { useState } from "react";
-import { FaUser, FaPhone, FaMapMarkerAlt } from "react-icons/fa";
+// eslint-disable-next-line no-unused-vars
+import { FaUsers, FaFileAlt } from "react-icons/fa";
 import "./index.css";
 
-const AddLoan = () => {
-    const [formData, setFormData] = useState({
-        candidateName: "",
-        mobileNumber: "",
-        loanProduct: "",
-        address: ""
-    });
+const LoanPersons = () => {
+    const [searchQuery, setSearchQuery] = useState("");
+    const [loanData, setLoanData] = useState([]); // Initially empty
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
+    const [statusUpdates, setStatusUpdates] = useState({}); // Store selected status changes
 
-    const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+    // Handle search input
+    const handleSearch = (e) => setSearchQuery(e.target.value);
+
+    // Fetch data from API on button click
+    const fetchLoanData = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const response = await fetch("https://srinivasa-backend.onrender.com/loans");
+            if (!response.ok) throw new Error("Failed to fetch loan data");
+            const data = await response.json();
+    
+            console.log("Fetched loan data:", data); // 🔍 Debugging log
+    
+            setLoanData(data);
+        } catch (err) {
+            setError(err.message);
+            setLoanData([]); // Reset data on error
+        } finally {
+            setLoading(false);
+        }
+    };    
+
+    // 🔥 Corrected Filtering
+    const filteredData = loanData.filter((item) =>
+        item?.candidateName?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+    // Handle status selection
+    const handleStatusChange = (id, newStatus) => {
+        setStatusUpdates((prev) => ({ ...prev, [id]: newStatus }));
     };
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        if (!formData.candidateName || !formData.mobileNumber || !formData.loanProduct || !formData.address) {
-            alert("Please fill in all required fields.");
-            return;
+    // Update status in backend and frontend
+    const updateLoanStatus = async (id) => {
+        const newStatus = statusUpdates[id];
+
+        if (!newStatus) return alert("Please select a new status before updating!");
+
+        try {
+            const response = await fetch(`https://srinivasa-backend.onrender.com/loans/${id}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ status: newStatus }),
+            });
+
+            if (!response.ok) throw new Error("Failed to update status");
+
+            // Update state to reflect new status instantly
+            setLoanData((prevData) =>
+                prevData.map((item) =>
+                    item.id === id ? { ...item, status: newStatus } : item
+                )
+            );
+
+            alert("Status updated successfully!");
+        } catch (error) {
+            console.error("Error updating status:", error);
+            alert("Error updating status. Try again.");
         }
-        console.log("Loan Details Submitted:", formData);
     };
 
     return (
-        <div className="loan-container">
-            <h2 className="loan-title">Add New Loan</h2>
+        <div className="container">
+            <header className="dashboard-header">
+                <h2>Loan Management System</h2>
+            </header>
 
-            <form className="loan-form" onSubmit={handleSubmit}>
-                {/* Personal Information */}
-                <div className="form-section">
-                    <h3>Personal Information</h3>
-                    <div className="input-group">
-                        <label>Candidate Name *</label>
-                        <div className="input-field">
-                            <FaUser className="icon" />
-                            <input type="text" name="candidateName" placeholder="Enter candidate name" value={formData.candidateName} onChange={handleChange} required />
-                        </div>
-                    </div>
+            {/* Search Bar */}
+            <div className="search-container">
+                <input type="text" placeholder="Enter person name..." value={searchQuery} onChange={handleSearch} />
+                <button className="fetch-btn" onClick={fetchLoanData}>
+                    Get Data
+                </button>
+            </div>
 
-                    <div className="input-group">
-                        <label>Mobile Number *</label>
-                        <div className="input-field">
-                            <FaPhone className="icon" />
-                            <input type="tel" name="mobileNumber" placeholder="Enter mobile number" value={formData.mobileNumber} onChange={handleChange} required />
-                        </div>
-                    </div>
-                </div>
+            {/* Display loading or error message */}
+            {loading && <p>Loading loan details...</p>}
+            {error && <p className="error-message">{error}</p>}
 
-                {/* Loan Details */}
-                <div className="form-section">
-                    <h3>Loan Details</h3>
-                    <div className="input-group">
-                        <label>Loan Products *</label>
-                        <select name="loanProduct" value={formData.loanProduct} onChange={handleChange} required>
-                            <option value="">Select loan product</option>
-                            <option value="home-loan">Paints Loan</option>
-                            <option value="car-loan">PVC or CPVC Loan</option>
-                            <option value="business-loan">Electronics Loan</option>
-                        </select>
-                    </div>
-                </div>
-
-                {/* Site Address */}
-                <div className="form-section">
-                    <h3>Site Address</h3>
-                    <div className="input-group">
-                        <label>Complete Address *</label>
-                        <div className="input-field">
-                            <FaMapMarkerAlt className="icon" />
-                            <textarea name="address" placeholder="Enter complete site address" value={formData.address} onChange={handleChange} required />
-                        </div>
-                    </div>
-                </div>
-
-                {/* Submit Button */}
-                <button type="submit" className="submit-btn">Add Loan Details</button>
-            </form>
-
-            <footer> Loan Management System</footer>
+            {/* Loan Data Table */}
+            {!loading && !error && (
+                <table className="loan-table">
+                    <thead>
+                        <tr>
+                            <th>S.NO</th>
+                            <th>Name of Person</th>
+                            <th>Number</th>
+                            <th>Site Address</th>
+                            <th>Loan Products</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {filteredData.length > 0 ? (
+                            filteredData.map((item, index) => (
+                                <tr key={item.id}>
+                                    <td>{index + 1}</td>
+                                    <td>{item.candidateName}</td>
+                                    <td>{item.mobileNumber}</td>
+                                    <td>{item.address}</td>
+                                    <td className="loan-data">{item.LoanData}</td>
+                                    <td>{item.createdAt}</td>
+                                    <td>
+                                        {/* Dropdown for selecting status */}
+                                        <select
+                                            value={statusUpdates[item.id] || item.status}
+                                            onChange={(e) => handleStatusChange(item.id, e.target.value)}
+                                        >
+                                            <option value="Pending">Pending</option>
+                                            <option value="Closed">Closed</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        {/* Button to apply status change */}
+                                        <button onClick={() => updateLoanStatus(item.id)}>Change</button>
+                                    </td>
+                                </tr>
+                            ))
+                        ) : (
+                            <tr>
+                                <td colSpan="8">No loan records found.</td>
+                            </tr>
+                        )}
+                    </tbody>
+                </table>
+            )}
         </div>
     );
 };
 
-export default AddLoan;
+export default LoanPersons;
