@@ -3,7 +3,7 @@ import { Link, Routes, Route, useLocation } from "react-router-dom"; // Import u
 import ProductSelect from "../Emulsions/index.js";
 import Receipt from "../Reciept/index.js";
 import EnamelsBilling from "../Enamels/index.js";
-import AddLoan from "../AddLoans/index.js";
+import AddLoan from "../AddLoans";
 import PiPes from "../Pipes/index.js";
 import ProductReport from "../ProductReport/index.js";
 import Loandetails from "../LoanDetails/index.js"
