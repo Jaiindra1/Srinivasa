@@ -3,7 +3,7 @@ import { FaSearch, FaHome, FaUsers, FaChartBar, FaFileAlt } from "react-icons/fa
 import { Link } from "react-router-dom";
 import "./index.css";
 
-const LoanPersons = () => {
+const Loandetails = () => {
     const [searchQuery, setSearchQuery] = useState("");
     const [loanData, setLoanData] = useState([]); // Initially empty
     const [loading, setLoading] = useState(false);
@@ -147,4 +147,4 @@ const LoanPersons = () => {
     );
 };
 
-export default LoanPersons;
+export default Loandetails;
