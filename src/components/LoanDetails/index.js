@@ -18,7 +18,7 @@ const Loandetails = () => {
         setLoading(true);
         setError(null);
         try {
-            const response = await fetch("http://localhost:5000/loans");
+            const response = await fetch("https://srinivasa-backend.onrender.com/loans");
             if (!response.ok) throw new Error("Failed to fetch loan data");
             const data = await response.json();
     
@@ -50,7 +50,7 @@ const Loandetails = () => {
         if (!newStatus) return alert("Please select a new status before updating!");
 
         try {
-            const response = await fetch(`http://localhost:5000/loans/${id}`, {
+            const response = await fetch(`https://srinivasa-backend.onrender.com/loans/${id}`, {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ status: newStatus }),
