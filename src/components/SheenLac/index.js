@@ -26,7 +26,7 @@ class SheenLacBilling extends Component {
 
     getData = async () => {
         try {
-            const response = await fetch('http://localhost:5000/SheenLac');
+            const response = await fetch('https://srinivasa-backend.onrender.com/SheenLac');
             if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
             const data = await response.json();
             const updateData = data.map(eachItem => ({
@@ -43,7 +43,7 @@ class SheenLacBilling extends Component {
     getBaseOptions = async (productId) => {
         try {
             if (!productId) return;
-            const response = await fetch(`http://localhost:5000/SheenLac/${productId}`);
+            const response = await fetch(`https://srinivasa-backend.onrender.com/SheenLac/${productId}`);
             if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
             const baseData = await response.json();
             const updateBase = baseData.map(eachItem => ({
