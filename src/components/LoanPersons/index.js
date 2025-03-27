@@ -16,7 +16,7 @@ const LoanPerson = () => {
         setLoading(true);
         setError(null);
         try {
-            const response = await fetch("https://srinivasa-backend.onrender.comgloans");
+            const response = await fetch("https://srinivasa-backend.onrender.com/gloans");
             if (!response.ok) throw new Error("Failed to fetch loan data");
             const data = await response.json();
             console.log("Fetched loan data:", data);
