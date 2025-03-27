@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FaUser, FaPhone, FaMapMarkerAlt } from "react-icons/fa";
 import "./index.css";
 
@@ -9,55 +8,84 @@ const AddLoan = () => {
         mobileNumber: "",
         loanProduct: "",
         address: "",
-        EmulsionsData: "",
+        EmulsionsData: [],
         createdAt: new Date().toISOString().slice(0, 19).replace("T", " ")
     });
 
-    // Handle Input Change
-    // Handle Input Change
-const handleChange = (e) => {
-    const { name, value } = e.target;
-    let updatedFormData = { ...formData, [name]: value };
+    // Fetch stored data on component mount
+    useEffect(() => {
+        const emulsionsData = JSON.parse(localStorage.getItem("EmulsionData")) || { todoList: [] };
+        const enamelsData = JSON.parse(localStorage.getItem("Enamels_Data")) || { todoList: [] };
+        const sheenLacData = JSON.parse(localStorage.getItem("SheenLacData")) || { todoList: [] };
 
-    // If "Paints Loan" is selected, fetch and display Emulsions Data from localStorage
-    if (name === "loanProduct" && value === "Paints-loan") {
-        const emulsionsData = localStorage.getItem("EmulsionData");
-        if (emulsionsData) {
-            const parsedData = JSON.parse(emulsionsData);
-            updatedFormData = { ...updatedFormData, EmulsionsData: parsedData };
+        // Merge all lists
+        const combinedTodoList = [
+            ...emulsionsData.todoList,
+            ...enamelsData.todoList,
+            ...sheenLacData.todoList
+        ];
+
+        // Set initial state with merged data
+        setFormData((prevState) => ({
+            ...prevState,
+            EmulsionsData: combinedTodoList
+        }));
+    }, []);
+
+    // Handle Input Change
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        let updatedFormData = { ...formData, [name]: value };
+
+        if (name === "loanProduct" && value === "Paints-loan") {
+            const emulsionsData = JSON.parse(localStorage.getItem("EmulsionData")) || { todoList: [] };
+            const enamelsData = JSON.parse(localStorage.getItem("Enamels_Data")) || { todoList: [] };
+            const sheenLacData = JSON.parse(localStorage.getItem("SheenLacData")) || { todoList: [] };
+
+            const combinedTodoList = [
+                ...emulsionsData.todoList,
+                ...enamelsData.todoList,
+                ...sheenLacData.todoList
+            ];
+
+            updatedFormData = { 
+                ...updatedFormData, 
+                EmulsionsData: combinedTodoList 
+            };
         }
-    } else {
-        // Clear EmulsionsData if another loan product is selected
-        updatedFormData.EmulsionsData = "";
-    }
 
-    setFormData(updatedFormData);
-};
-
+        setFormData(updatedFormData);
+    };
 
     // Handle Form Submission
     const handleSubmit = async (e) => {
         e.preventDefault();
-    
+
         if (!formData.candidateName || !formData.mobileNumber || !formData.loanProduct || !formData.address || !formData.createdAt) {
             alert("Please fill in all required fields.");
             return;
         }
-    
+
         try {
             const response = await fetch("https://srinivasa-backend.onrender.com/add-loan", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(formData),
             });
-    
+
             const data = await response.json();
-            console.log("Server Response:", data); // Debugging line 🔍
-    
+            console.log("Server Response:", data);
+
             if (response.ok) {
-                alert("Loan details submitted successfully!"); // ✅ This should work
-                localStorage.clear(); // Clear local storage after submission
-                setFormData({ candidateName: "", mobileNumber: "", loanProduct: "", address: "", EmulsionsData: "" });
+                alert("Loan details submitted successfully!");
+                
+                // Remove only loan-related data from localStorage
+                localStorage.removeItem("EmulsionData");
+                localStorage.removeItem("Enamels_Data");
+                localStorage.removeItem("SheenLacData");
+
+                // Reset form fields
+                setFormData({ candidateName: "", mobileNumber: "", loanProduct: "", address: "", EmulsionsData: [] });
             } else {
                 alert("Error: " + (data.error || "Something went wrong"));
             }
@@ -66,8 +94,7 @@ const handleChange = (e) => {
             alert("Failed to submit loan details. Please try again.");
         }
     };
-          
-    
+
     return (
         <div className="loan-container">
             <h2 className="loan-title">Add New Loan</h2>
@@ -110,39 +137,30 @@ const handleChange = (e) => {
                 {/* Loan Details */}
                 <div className="form-section">
                     <h3>Loan Details</h3>
-                    <div className="input-group">
-                        <label>Loan Products *</label>
-                        <select name="loanProduct" value={formData.loanProduct} onChange={handleChange} required>
-                            <option value="">Select loan product</option>
-                            <option value="Paints-loan">Paints Loan</option>
-                            <option value="car-loan">PVC or CPVC Loan</option>
-                            <option value="business-loan">Electronics Loan</option>
-                        </select>
-                    </div>
-                    {/* Display Emulsions Data if available */}
-                    {formData.loanProduct === "Paints-loan" && formData.EmulsionsData && (
+                    
+                    {/* Display Receipt Data By Default */}
+                    {formData.EmulsionsData.length > 0 && (
                         <div className="form-section">
-                            <h3>Emulsions Data</h3>
                             <div className="input-group">
-                            <table className="emulsions-table">
-            <thead>
-                <tr>
-                    <th>S.No</th>
-                    <th>Product Name</th>
-                    <th>Quantity</th>
-                    <th>Price</th>
-                </tr>
-            </thead>
-            <tbody>
-                {formData.EmulsionsData.todoList.map((item, index) => (
-                    <tr key={index}>
-                        <td>{index + 1}.</td>
-                        <td>{item.product}_{item.base} - {item.liters}</td>
-                        <td>{item.quantity}</td>
-                        <td>₹ {item.price}</td>
-                    </tr>
-                ))}
-            </tbody>
+                                <table className="emulsions-table">
+                                    <thead>
+                                        <tr>
+                                            <th>S.No</th>
+                                            <th>Product Name</th>
+                                            <th>Quantity</th>
+                                            <th>Price</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {formData.EmulsionsData.map((item, index) => (
+                                            <tr key={index}>
+                                                <td>{index + 1}.</td>
+                                                <td>{item.product}_{item.base} - {item.liters}</td>
+                                                <td>{item.quantity}</td>
+                                                <td>₹ {item.price}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
                                 </table>
                             </div>
                         </div>
