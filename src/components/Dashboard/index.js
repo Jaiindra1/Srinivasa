@@ -24,7 +24,7 @@ const Dashboard = () => {
     useEffect(() => {
         const fetchDashboardData = async () => {
             try {
-                const response = await fetch("http://localhost:5000/ploans");
+                const response = await fetch("https://srinivasa-backend.onrender.com/ploans");
                 if (!response.ok) throw new Error("Failed to fetch pending loans");
                 const data = await response.json();
                 const totalPending = data.reduce((sum, loan) => sum + Math.floor(loan.Price), 0);
@@ -36,7 +36,7 @@ const Dashboard = () => {
 
         const fetchActiveBorrowers = async () => {
             try {
-                const response = await fetch("http://localhost:5000/ActiveBorrowers");
+                const response = await fetch("https://srinivasa-backend.onrender.com/ActiveBorrowers");
                 if (!response.ok) throw new Error("Failed to fetch active borrowers");
                 const data = await response.json();
                 setActiveBorrowers(data.Number || 0);
@@ -47,7 +47,7 @@ const Dashboard = () => {
 
         const fetchTotalProducts = async () => {
             try {
-                const response = await fetch("http://localhost:5000/totalProducts");
+                const response = await fetch("https://srinivasa-backend.onrender.com/totalProducts");
                 if (!response.ok) throw new Error("Failed to fetch total products");
                 const data = await response.json();
                 setTotalProducts(data.total || 0);
@@ -58,7 +58,7 @@ const Dashboard = () => {
 
         const fetchTotalLoans = async () => {
             try {
-                const response = await fetch("http://localhost:5000/ploans");
+                const response = await fetch("https://srinivasa-backend.onrender.com/ploans");
                 if (!response.ok) throw new Error("Failed to fetch total loans");
                 const data = await response.json();
                 setTotalLoans(data[0].ID || 0);
@@ -69,7 +69,7 @@ const Dashboard = () => {
 
         const fetchRecentLoans = async () => {
             try {
-                const response = await fetch("http://localhost:5000/recent-loans");
+                const response = await fetch("https://srinivasa-backend.onrender.com/recent-loans");
                 if (!response.ok) throw new Error("Failed to fetch recent loans");
                 const data = await response.json();
                 setActivities(data.map(loan => ({
