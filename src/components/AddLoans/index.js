@@ -67,7 +67,7 @@ const AddLoan = () => {
         }
 
         try {
-            const response = await fetch("http://localhost:5000/add-loan", {
+            const response = await fetch("https://srinivasa-backend.onrender.com/add-loan", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(formData),
