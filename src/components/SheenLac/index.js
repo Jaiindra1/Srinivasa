@@ -102,10 +102,11 @@ class SheenLacBilling extends Component {
             const company = selectedProduct ? selectedProduct.company : "Unknown";
     
             let basePrice = parseFloat(selectedPrice); // Use stored price
+            let percentage = parseFloat(18) || 0; // GST (default 18%)
             let quantity = parseInt(selectedQuantity, 10);
             let discountPercentage = parseFloat(discount) || 0;
     
-            let finalPrice = basePrice + (basePrice * (percentage / 100));// Apply GST
+            let finalPrice = basePrice + (basePrice * (percentage / 100)); // Apply GST
             finalPrice *= quantity; // Apply quantity
             finalPrice = finalPrice - (finalPrice * (discountPercentage / 100)); // Apply discount
             finalPrice = finalPrice.toFixed(2);
@@ -255,7 +256,7 @@ class SheenLacBilling extends Component {
 
 
         return (
-            <div className="container">
+            <div className="sheenLac-container">
                 <h1 className="heading">SheenLac Materials</h1>
 
                 <input
