@@ -105,7 +105,7 @@ class SheenLacBilling extends Component {
             let quantity = parseInt(selectedQuantity, 10);
             let discountPercentage = parseFloat(discount) || 0;
     
-            let finalPrice = basePrice // Apply GST
+            let finalPrice = basePrice + (basePrice * (percentage / 100));// Apply GST
             finalPrice *= quantity; // Apply quantity
             finalPrice = finalPrice - (finalPrice * (discountPercentage / 100)); // Apply discount
             finalPrice = finalPrice.toFixed(2);
