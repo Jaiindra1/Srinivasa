@@ -17,7 +17,7 @@ const ProductReport = () => {
         setReportData([]);
 
          if (month && year) {
-            url = `http://localhost:5000/get-product-report/month?month=${month}&year=${year}`;
+            url = `https://srinivasa-backend.onrender.com/get-product-report/month?month=${month}&year=${year}`;
         }else {
             alert("Please select a valid filter (Month & Year, Day & Year, or Exact Date).");
             setLoading(false);
@@ -50,7 +50,7 @@ const ProductReport = () => {
         setReportData([]);
 
           if (day && month && year) {
-            url = `http://localhost:5000/get-product-report/day?day=${day}&month=${month}&year=${year}`;
+            url = `https://srinivasa-backend.onrender.com/get-product-report/day?day=${day}&month=${month}&year=${year}`;
         } else {
             alert("Please select a valid filter (Month & Year, Day & Year, or Exact Date).");
             setLoading(false);
