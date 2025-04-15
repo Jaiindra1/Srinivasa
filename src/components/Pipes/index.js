@@ -34,7 +34,7 @@ const ProductBilling = () => {
   const handleProductChange = (productName) => {
     if (!productName || !category) return;
   
-    fetch(`http://localhost:5000/${category.toLowerCase()}/product/${encodeURIComponent(productName)}`)
+    fetch(`https://srinivasa-backend.onrender.com/${category.toLowerCase()}/product/${encodeURIComponent(productName)}`)
       .then((res) => res.json())
       .then((data) => {
         // Filter the array for the selected product
