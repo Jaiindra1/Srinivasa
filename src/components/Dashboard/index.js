@@ -4,7 +4,7 @@ import ProductSelect from "../Emulsions/index.js";
 import Receipt from "../Reciept/index.js";
 import SheenLacBilling from "../SheenLac/index.js";
 import AddLoan from "../AddLoans/index.js";
-import PiPes from "../Pipes/index.js";
+import ProductBilling from "../Pipes/index.js";
 import ProductReport from "../ProductReport/index.js";
 import Loandetails from "../LoanDetails/index.js";
 import LoanPerson from "../LoanPersons/index.js";
@@ -112,7 +112,7 @@ const Dashboard = () => {
                         <Route path="/PReports" element={<ProductReport />} />
                         <Route path="/AddLoans" element={<AddLoan />} />
                         <Route path="/LoanProducts" element={<Loandetails />} />
-                        <Route path="/Pvc|cpvc" element={<PiPes />} />
+                        <Route path="/Pvc|cpvc" element={<ProductBilling />} />
                         <Route path="/Lpersons" element={<LoanPerson />} />
                         <Route
                             path="/"
