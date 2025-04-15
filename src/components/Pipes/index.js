@@ -1,411 +1,237 @@
-import { Component } from "react";
-import { useNavigate } from "react-router-dom";
-import './index.css';
+import React, { useState, useEffect } from "react";
+import "./index.css"; // Import the CSS file
 
-class PiPes extends Component {
-     state = {
-        searchInput: "",
-        data: [],
-        filteredData: [],
-        baseOptions: [],
-        selectedBase: "",
-        selectedLiters: "",
-        selectedPrice: "",
-        showDropdown: false,
-        percentageIncrease: "18",
-        discount: "",
-        selectedQuantity: "",
-        todoList: [],
-        editIndex: null,
-        showReceipt: false, // Controls receipt visibility
-    };
-    
+const ProductBilling = () => {
+  const [category, setCategory] = useState("");
+  const [products, setProducts] = useState([]);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [size, setSize] = useState("");
+  const [mrp, setMrp] = useState(0);
+  const [quantity, setQuantity] = useState(1);
+  const [billItems, setBillItems] = useState([]);
 
-    componentDidMount() {
-        this.getData();
+  const categories = ["CPVC", "UPVC"];
+
+  const getApiUrl = (category) => `https://srinivasa-backend.onrender.com/${category.toLowerCase()}`;
+
+  useEffect(() => {
+    if (category) {
+      fetch(getApiUrl(category))
+        .then((res) => res.json())
+        .then((data) => setProducts(data))
+        .catch((err) => console.error("Failed to fetch products:", err));
+    } else {
+      setProducts([]);
     }
 
-    getData = async () => {
-        try {
-            const response = await fetch('https://srinivasa-backend.onrender.com/Products');
-            if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-            const data = await response.json();
-            const updateData = data.map(eachItem => ({
-                id: eachItem.ProductId,
-                company: eachItem.Company,
-                productName: eachItem.ProductName,
-            }));
-            this.setState({ data: updateData, filteredData: updateData });
-        } catch (error) {
-            console.error("Failed to fetch data:", error.message);
+    // Reset all fields when category changes
+    setSelectedProduct(null);
+    setSize("");
+    setMrp(0);
+    setQuantity(1);
+  }, [category]);
+
+  const handleProductChange = (productName) => {
+    if (!productName || !category) return;
+  
+    fetch(`http://localhost:5000/${category.toLowerCase()}/product/${encodeURIComponent(productName)}`)
+      .then((res) => res.json())
+      .then((data) => {
+        // Filter the array for the selected product
+        const filtered = data.filter(p => p.product_name === productName);
+  
+        if (filtered.length === 0) {
+          console.warn("No matching products found for:", productName);
+          return;
         }
-    };
-
-    getBaseOptions = async (productId) => {
-        try {
-            if (!productId) return;
-            const response = await fetch(`https://srinivasa-backend.onrender.com/BaseOptions/${productId}`);
-            if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
-            const baseData = await response.json();
-            const updateBase = baseData.map(eachItem => ({
-                base: eachItem.BaseCode,
-                liters: eachItem.Liters,
-                price: eachItem.Price,
-            }));
-
-            this.setState({ baseOptions: updateBase });
-        } catch (error) {
-            console.error("Failed to fetch base options:", error.message);
-        }
-    };
-
-    handleSearch = (event) => {
-        const searchInput = event.target.value.toLowerCase();
-        const { data } = this.state;
-
-        const filteredData = data.filter(product => 
-            product.productName.toLowerCase().includes(searchInput)
-        );
-
-        this.setState({ searchInput: event.target.value, filteredData, showDropdown: true });
-    };
-
-    handleProductSelect = (productName, id) => {
-        this.setState({
-            searchInput: productName,
-            selectedBase: "",
-            selectedLiters: "",
-            selectedPrice: "",
-            showDropdown: false,
-            baseOptions: []
+  
+        setSelectedProduct({
+          productName: productName,
+          priceList: filtered.map(p => ({
+            size_inch: p.size_inch,
+            mrp: p.mrp
+          }))
         });
-        this.getBaseOptions(id);
+  
+        setSize("");
+        setMrp(0);
+        setQuantity(1);
+      })
+      .catch((err) => console.error("Failed to fetch product details:", err));
+  };
+
+  const handleSizeChange = (selectedSize) => {
+    setSize(selectedSize);
+
+    // Find the matching price entry based on size
+    const entry = selectedProduct?.priceList.find((item) => item.size_inch === selectedSize);
+    setMrp(entry?.mrp || 0); // Set MRP based on selected size
+  };
+
+  const addToBill = () => {
+    if (!selectedProduct || !size || mrp <= 0 || quantity <= 0) return;
+
+    const newItem = {
+      productName: selectedProduct.productName,
+      size,
+      mrp,
+      quantity,
+      subtotal: mrp * quantity,
     };
 
-    handleBaseSelect = (event) => {
-        this.setState({ selectedBase: event.target.value, selectedLiters: "", selectedPrice: "" });
-    };
-    
-    handleLitersSelect = (event) => {
-        const selectedLiters = event.target.value;
-        const { baseOptions, selectedBase } = this.state;
-        const selectedItem = baseOptions.find(base => base.base === selectedBase && base.liters === selectedLiters);
-        
-        this.setState({ selectedLiters, selectedPrice: selectedItem ? selectedItem.price : "N/A" });
-    };
+    setBillItems([...billItems, newItem]);
 
-    handleQuantitySelect = (event) => {
-        this.setState({ selectedQuantity: event.target.value });
-    };
-    
-    handleAddTask = () => {
-        const { searchInput, selectedBase, selectedLiters, selectedPrice, selectedQuantity, discount, todoList, data, editIndex } = this.state;
-    
-        if (searchInput.trim() !== "" && selectedBase && selectedLiters && selectedQuantity) {
-            const selectedProduct = data.find(product => product.productName === searchInput);
-            const company = selectedProduct ? selectedProduct.company : "Unknown";
-    
-            let basePrice = parseFloat(selectedPrice); // Use stored price
-            let percentage = parseFloat(18) || 0; // GST (default 18%)
-            let quantity = parseInt(selectedQuantity, 10);
-            let discountPercentage = parseFloat(discount) || 0;
-    
-            let finalPrice = basePrice ; // Apply GST
-            finalPrice *= quantity; // Apply quantity
-            finalPrice = finalPrice - (finalPrice * (discountPercentage / 100)); // Apply discount
-            finalPrice = finalPrice.toFixed(2);
-    
-            const updatedTask = {
-                company,
-                product: searchInput,
-                base: selectedBase,
-                liters: selectedLiters,
-                quantity,
-                price: finalPrice,
-                discount: `${discountPercentage}%`,
-                gst: `${percentage}%`
-            };
-    
-            if (editIndex !== null) {
-                todoList[editIndex] = updatedTask;
-            } else {
-                todoList.push(updatedTask);
-            }
-    
-            this.setState({
-                todoList,
-                searchInput: "",
-                selectedBase: "",
-                selectedLiters: "",
-                selectedPrice: "",
-                selectedQuantity: "",
-                percentageIncrease: "",
-                discount: "",
-                baseOptions: [],
-                editIndex: null
-            });
-        }
-    };
-    
-    handleEditTask = (index) => {
-        const item = this.state.todoList[index];
-    
-        this.setState({
-            searchInput: item.product,
-            selectedBase: item.base,
-            selectedLiters: item.liters,
-            selectedQuantity: item.quantity,
-            discount: item.discount.replace('%', ''), // Remove '%' for editing
-            percentageIncrease: item.gst.replace('%', ''),
-            selectedPrice: item.price,
-            editIndex: index,
-        });
-    };
-    
-    
-    handleSaveEdit = () => {
-        const { editIndex, selectedQuantity, discount, todoList } = this.state;
-    
-        if (editIndex !== null) {
-            let updatedTask = { ...todoList[editIndex] };
-    
-            // Extract old values
-            let oldQuantity = parseInt(updatedTask.quantity, 10);
-            let oldPrice = parseFloat(updatedTask.price.replace("₹", "")); // Convert ₹ to number
-            let oldDiscount = parseFloat(updatedTask.discount.replace("%", "")) || 0; // Remove % and convert
-    
-            // Convert input values
-            let newQuantity = parseInt(selectedQuantity, 10);
-            let newDiscount = parseFloat(discount) || 0;
-    
-            // ✅ Step 1: If quantity increased, multiply by the original price per unit
-            let finalPrice = oldPrice * (newQuantity / oldQuantity);
-    
-            // ✅ Step 2: If discount changed, apply new discount
-            if (newDiscount !== oldDiscount) {
-                let discountDifference = (oldDiscount - newDiscount) / 100;
-                finalPrice = finalPrice * (1 + discountDifference); // Apply discount change
-            }
-    
-            // Round to 2 decimal places
-            finalPrice = finalPrice.toFixed(2);
-    
-            // Update the task in the list
-            updatedTask.quantity = newQuantity;
-            updatedTask.discount = `${newDiscount}%`;
-            updatedTask.price = finalPrice; // ✅ Remove ₹ to avoid duplicate currency symbols
-    
-            let updatedList = [...todoList];
-            updatedList[editIndex] = updatedTask;
-    
-            // ✅ Set state and ensure total updates
-            this.setState({
-                todoList: updatedList,
-                editIndex: null, // Exit edit mode
-                selectedPrice: finalPrice,
-            }, () => {
-                console.log("Updated List:", updatedList);
-                console.log("New Total:", this.calculateTotal()); // Debugging
-            });
-        }
-    };
-    
-    
-    handleRemoveTask = (index) => {
-        this.setState(prevState => ({
-            todoList: prevState.todoList.filter((_, i) => i !== index),
-            editIndex: null
-        }));
-    };
-    calculateTotal = () => {
-        const total = this.state.todoList.reduce((sum, item) => {
-            let itemPrice = parseFloat(item.price) || 0;
-            return sum + itemPrice;
-        }, 0);
-    
-        return total.toFixed(2);
-    };
-    handleGenerateReceipt = () => {
-        this.setState({ showReceipt: true });
-    };
-    handleAddToReceipt = () => {
-        const { todoList } = this.state;
-        const total = this.calculateTotal();
-    
-        if (todoList.length === 0) {
-            alert("No items to add to receipt!");
-            return;
-        }
-    
-        // Store data in localStorage
-        localStorage.setItem('receiptData', JSON.stringify({ todoList, total }));
-    
-        // Reset state
-        this.setState({
-            todoList: [],
-            searchInput: "",
-            selectedBase: "",
-            selectedLiters: "",
-            selectedPrice: "",
-            selectedQuantity: "",
-            percentageIncrease: "18",
-            discount: "",
-            baseOptions: [],
-            editIndex: null,
-            showReceipt: false
-        });
-    };    
-    
+    // Reset fields for the next product
+    setSelectedProduct(null);
+    setSize("");
+    setMrp(0);
+    setQuantity(1);
+  };
 
-    render() {
-        const { searchInput, filteredData, showDropdown, baseOptions, selectedBase, selectedLiters, todoList } = this.state;
-       
-        return (
-            <div className="container">
-                <h1 className="heading">PVC || CPVC</h1>
+  const handleAddToReceipt = () => {
+    const total = billItems.reduce((acc, item) => acc + item.subtotal, 0);
+  
+    localStorage.setItem(
+      'SheenLacData',
+      JSON.stringify({ todoList: billItems, total })
+    );
+  
+    alert("Bill finalized and saved to localStorage!");
+  
+    // Clear the table and reset bill
+    setBillItems([]);
+    setSelectedProduct(null);
+    setSize("");
+    setMrp(0);
+    setQuantity(1);
+  };
 
-                <input
-                    className="item-list"
-                    onChange={this.handleSearch}
-                    value={searchInput}
-                    placeholder="Search for a product..."
-                />
-                
-                {showDropdown && filteredData.length > 0 && (
-                    <ul className="dropdown">
-                        {filteredData.map(product => (
-                            <li key={product.id} onClick={() => this.handleProductSelect(product.productName, product.id)}>
-                                {product.productName}
-                            </li>
-                        ))}
-                    </ul>
-                )}
+  return (
+    <div className="min-h-screen bg-gray-50 py-8 px-4">
+      <div className="bg-white shadow-lg rounded-xl p-6 w-full max-w-4xl mx-auto mt-10 border border-gray-200">
+        <h2 className="text-2xl font-bold mb-6 text-blue-800 border-b pb-2">Product Billing</h2>
 
-                {baseOptions.length > 0 && (
-                    <>
-                        <select className="base-select" onChange={this.handleBaseSelect} value={selectedBase}>
-                            <option value="" disabled>Size</option>
-                            {baseOptions.map((baseItem, index) => (
-                                <option key={index} value={baseItem.base}>{baseItem.base}</option>
-                            ))}
-                        </select>
+        {/* Category Dropdown */}
+        <label className="block mb-1 font-semibold">Select Category</label>
+        <select
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
+          className="w-full p-2 border rounded shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400 mb-4"
+        >
+          <option value="">-- Select Category --</option>
+          {categories.map((cat) => (
+            <option key={cat} value={cat}>{cat}</option>
+          ))}
+        </select>
 
-                        {selectedBase && (
-                            <select className="liters-select" onChange={this.handleLitersSelect} value={selectedLiters}>
-                                <option value="" disabled>Std Pkg</option>
-                                {baseOptions
-                                    .filter(baseItem => baseItem.base === selectedBase)
-                                    .map((baseItem, index) => (
-                                        <option key={index} value={baseItem.liters}>{baseItem.liters}</option>
-                                    ))}
-                            </select>
-                        )}
+        {/* Product Dropdown */}
+        {products.length > 0 && (
+          <>
+            <label className="block ml-1 font-semibold">Select Product</label>
+            <select
+              value={selectedProduct ? selectedProduct.productName : ""}
+              onChange={(e) => handleProductChange(e.target.value)}
+              className="w-auto p-2 border mb-4 rounded"
+            >
+              <option value="">-- Select Product --</option>
+              {products.map((product, idx) => (
+                <option key={idx} value={product.productName}>
+                  {product.productName}
+                </option>
+              ))}
+            </select>
+          </>
+        )}
 
-                    {selectedLiters && (
-                        <>
-                            <select className="quantity-select" onChange={this.handleQuantitySelect} value={this.state.selectedQuantity}>
-                                <option value="" disabled>Select Quantity</option>
-                                {[1,2,3,4,5,6,7,8,9,10 ].map(num => (
-                                    <option key={num} value={num}>{num}</option>
-                                ))}
-                            </select>
-                        <br/>
-                        {/* Discount Input */}
-                        <input 
-                            type="" 
-                            className="quantity-select discount-input" 
-                            placeholder="Enter Discount %" 
-                            value={this.state.discount} 
-                            onChange={(e) => this.setState({ discount: e.target.value })} 
-                        />
+        {/* Size and Quantity Fields */}
+        {selectedProduct && selectedProduct.priceList.length > 0 && (
+          <>
+            <label className="block mb-1 font-semibold">Select Size (Inch)</label>
+            <select
+              value={size}
+              onChange={(e) => handleSizeChange(e.target.value)}
+              className="w-full p-2 border mb-2 rounded"
+            >
+              <option value="">-- Select Size --</option>
+              {selectedProduct.priceList.map((entry, idx) => (
+                <option key={idx} value={entry.size_inch}>
+                  {entry.size_inch}
+                </option>
+              ))}
+            </select>
 
-                        </>
-                    )}
-                    </>
-                )}
-                <br></br>
-                <button className='form-submit' onClick={this.handleAddTask} disabled={!selectedBase || !selectedLiters}>
-                    Add to List
-                </button>
-                <h2>List</h2>
-                        <table>
-                         <thead>
-                            <tr>
-                                <th>S.No</th>
-                                <th>Company</th>
-                                <th>Product</th>
-                                <th>Quantity</th>
-                                <th>GST</th>
-                                <th>Discount</th>
-                                <th>Amount</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-    {todoList.map((task, index) => (
-        <tr key={index}>
-            <td>{index + 1}</td> 
-            <td>{task.company}</td>
-            <td className="product">{task.product}-{task.base}-{task.liters}</td>
-            <td>
-                {this.state.editIndex === index ? (
-                    <input
-                        type="text"
-                        className="quantity"
-                        value={this.state.selectedQuantity}
-                        onChange={(e) => this.setState({ selectedQuantity: e.target.value })}
-                    />
-                ) : (
-                    task.quantity
-                )}
-            </td>
-            <td>{task.gst}</td>
-            <td>
-                {this.state.editIndex === index ? (
-                    <input
-                        type="text"
-                        className="discount"
-                        value={this.state.discount}
-                        onChange={(e) => this.setState({ discount: e.target.value })}
-                    />
-                ) : (
-                    task.discount
-                )}
-            </td>
-            <td>{task.price}</td>
-            <td>
-                {this.state.editIndex === index ? (
-                    <button onClick={this.handleSaveEdit}>Done</button>
-                ) : (
-                    <>
-                        <button className="Edit" onClick={() => this.handleEditTask(index)}>Edit</button>
-                        <br></br>
-                        <button className="remove" onClick={() => this.handleRemoveTask(index)}>Remove</button>
-                    </>
-                )}
-            </td>
-        </tr>
-        
-    ))}
-     <tr>
-                <td colSpan="6" className="total-label"><strong>Total:</strong></td>
-                <td colSpan="2"><p className="column-3">{this.calculateTotal()}</p></td>
-                </tr>
-</tbody>
-
-        </table>
-
-         {/* Button to Navigate to Receipt Page */}
-         <button onClick={this.handleAddToReceipt}>
-    Add to Receipt
-</button>
-
+            <div className="mb-2">
+              <label className="w-full block mb-1 font-semibold">Quantity</label>
+              <input
+                type="number"
+                min="1"
+                value={quantity}
+                onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
+                className="w-1 p-2 border rounded shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400" // Changed to w-1/4
+              />
             </div>
-        );
-    }
-}
 
-export default function ProductSelectWrapper(props) {
-    const navigate = useNavigate();
-    return <PiPes {...props} navigate={navigate} />;
-}
+            <button
+              onClick={addToBill}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded shadow mt-2 transition duration-200"
+            >
+              Add to Table
+            </button>
+
+            <p className="text-sm text-gray-600 mt-2">
+              Selected Size: {size || "None"}, MRP: ₹{mrp}
+            </p>
+          </>
+        )}
+
+        {/* Bill Table */}
+        {billItems.length > 0 && (
+          <div className="mt-6">
+            <h3 className="text-lg font-bold mb-2">Bill Summary</h3>
+            <table className="w-full border text-left shadow-sm rounded overflow-hidden">
+              <thead className="bg-gray-100 text-gray-700">
+                <tr>
+                  <th className="border p-2">Product</th>
+                  <th className="border p-2">Size</th>
+                  <th className="border p-2">MRP (₹)</th>
+                  <th className="border p-2">Qty</th>
+                  <th className="border p-2">Subtotal (₹)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {billItems.map((item, idx) => (
+                  <tr key={idx}>
+                    <td className="border p-2">{item.productName}</td>
+                    <td className="border p-2">{item.size}</td>
+                    <td className="border p-2">₹{item.mrp}</td>
+                    <td className="border p-2">{item.quantity}</td>
+                    <td className="border p-2 font-semibold">₹{item.subtotal}</td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr className="bg-blue-50">
+                  <td colSpan="4" className="border p-2 text-right font-bold text-blue-800">
+                    Total Amount
+                  </td>
+                  <td className="border p-2 font-bold text-green-700 text-lg">
+                    ₹{billItems.reduce((acc, item) => acc + item.subtotal, 0)}
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+
+            <button
+              onClick={handleAddToReceipt}
+              className="mt-6 bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-xl text-lg font-semibold shadow-md transition duration-200"
+            >
+              Finalize Bill
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default ProductBilling;
