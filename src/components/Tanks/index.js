@@ -13,7 +13,7 @@ const TanksBilling = () => {
 
   const getApiUrl = (category) => {
     const formatted = category.toLowerCase().replace(" ", "-");
-    return `http://localhost:5000/${formatted}`;
+    return `https://srinivasa-backend.onrender.com/${formatted}`;
   };
 
   useEffect(() => {
